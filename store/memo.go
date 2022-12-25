@@ -21,6 +21,8 @@ type memoRaw struct {
 	CreatorID int
 	CreatedTs int64
 	UpdatedTs int64
+	UA        string
+	IP        string
 
 	// Domain specific fields
 	Content    string
@@ -38,6 +40,8 @@ func (raw *memoRaw) toMemo() *api.Memo {
 		CreatorID: raw.CreatorID,
 		CreatedTs: raw.CreatedTs,
 		UpdatedTs: raw.UpdatedTs,
+		UA:        raw.UA,
+		IP:        raw.IP,
 
 		// Domain specific fields
 		Content:    raw.Content,
@@ -235,16 +239,16 @@ func (s *Store) DeleteMemo(ctx context.Context, delete *api.MemoDelete) error {
 }
 
 func createMemoRaw(ctx context.Context, tx *sql.Tx, create *api.MemoCreate) (*memoRaw, error) {
-	set := []string{"creator_id", "content", "visibility"}
-	args := []interface{}{create.CreatorID, create.Content, create.Visibility}
-	placeholder := []string{"?", "?", "?"}
+	set := []string{"creator_id", "content", "visibility", "ua", "ip"}
+	args := []interface{}{create.CreatorID, create.Content, create.Visibility, create.UA, create.IP}
+	placeholder := []string{"?", "?", "?", "?", "?"}
 
 	query := `
 		INSERT INTO memo (
 			` + strings.Join(set, ", ") + `
 		)
 		VALUES (` + strings.Join(placeholder, ",") + `)
-		RETURNING id, creator_id, created_ts, updated_ts, row_status, content, visibility
+		RETURNING id, creator_id, created_ts, updated_ts, row_status, content, visibility, ua, ip
 	`
 	var memoRaw memoRaw
 	if err := tx.QueryRowContext(ctx, query, args...).Scan(
@@ -255,6 +259,8 @@ func createMemoRaw(ctx context.Context, tx *sql.Tx, create *api.MemoCreate) (*me
 		&memoRaw.RowStatus,
 		&memoRaw.Content,
 		&memoRaw.Visibility,
+		&memoRaw.IP,
+		&memoRaw.UA,
 	); err != nil {
 		return nil, FormatError(err)
 	}
@@ -280,6 +286,12 @@ func patchMemoRaw(ctx context.Context, tx *sql.Tx, patch *api.MemoPatch) (*memoR
 	if v := patch.Visibility; v != nil {
 		set, args = append(set, "visibility = ?"), append(args, *v)
 	}
+	if v := patch.IP; v != "" {
+		set, args = append(set, "ip = ?"), append(args, v)
+	}
+	if v := patch.UA; v == "" {
+		set, args = append(set, "ua = ?"), append(args, v)
+	}
 
 	args = append(args, patch.ID)
 
@@ -287,7 +299,7 @@ func patchMemoRaw(ctx context.Context, tx *sql.Tx, patch *api.MemoPatch) (*memoR
 		UPDATE memo
 		SET ` + strings.Join(set, ", ") + `
 		WHERE id = ?
-		RETURNING id, creator_id, created_ts, updated_ts, row_status, content, visibility
+		RETURNING id, creator_id, created_ts, updated_ts, row_status, content, visibility, ua, ip
 	`
 	var memoRaw memoRaw
 	if err := tx.QueryRowContext(ctx, query, args...).Scan(
@@ -298,6 +310,8 @@ func patchMemoRaw(ctx context.Context, tx *sql.Tx, patch *api.MemoPatch) (*memoR
 		&memoRaw.RowStatus,
 		&memoRaw.Content,
 		&memoRaw.Visibility,
+		&memoRaw.UA,
+		&memoRaw.IP,
 	); err != nil {
 		return nil, FormatError(err)
 	}
@@ -340,7 +354,9 @@ func findMemoRawList(ctx context.Context, tx *sql.Tx, find *api.MemoFind) ([]*me
 			updated_ts,
 			row_status,
 			content,
-			visibility
+			visibility,
+			ua,
+			ip
 		FROM memo
 		WHERE ` + strings.Join(where, " AND ") + `
 		ORDER BY created_ts DESC
@@ -362,6 +378,8 @@ func findMemoRawList(ctx context.Context, tx *sql.Tx, find *api.MemoFind) ([]*me
 			&memoRaw.RowStatus,
 			&memoRaw.Content,
 			&memoRaw.Visibility,
+			&memoRaw.UA,
+			&memoRaw.IP,
 		); err != nil {
 			return nil, FormatError(err)
 		}

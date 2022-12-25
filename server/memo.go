@@ -57,6 +57,9 @@ func (s *Server) registerMemoRoutes(g *echo.Group) {
 			}
 		}
 
+		memoCreate.UA = ua(c)
+		memoCreate.IP = c.RealIP()
+
 		memo, err := s.Store.CreateMemo(ctx, memoCreate)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, "Failed to create memo").SetInternal(err)
@@ -110,6 +113,8 @@ func (s *Server) registerMemoRoutes(g *echo.Group) {
 		memoPatch := &api.MemoPatch{
 			ID:        memoID,
 			UpdatedTs: &currentTs,
+			IP:        c.RealIP(),
+			UA:        ua(c),
 		}
 		if err := json.NewDecoder(c.Request().Body).Decode(memoPatch); err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, "Malformatted patch memo request").SetInternal(err)

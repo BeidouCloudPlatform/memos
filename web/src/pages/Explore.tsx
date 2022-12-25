@@ -89,6 +89,7 @@ const Explore = () => {
                     <a className="name-text" href={`/u/${memo.creator.id}`}>
                       @{memo.creator.nickname || memo.creator.username}
                     </a>
+                    {!(memo.ua === "default" || memo.ua === "web") && <span className="ua-text">{memo.ua}</span>}
                   </div>
                   <MemoContent className="memo-content" content={memo.content} onMemoContentClick={() => undefined} />
                   <MemoResources resourceList={memo.resourceList} />

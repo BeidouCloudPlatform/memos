@@ -14,6 +14,8 @@ interface Memo {
   visibility: Visibility;
   pinned: boolean;
   displayTs: TimeStamp;
+  ua: string;
+  ip: string;
 
   creator: User;
   resourceList: Resource[];

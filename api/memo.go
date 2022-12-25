@@ -32,6 +32,8 @@ type Memo struct {
 	CreatorID int       `json:"creatorId"`
 	CreatedTs int64     `json:"createdTs"`
 	UpdatedTs int64     `json:"updatedTs"`
+	UA        string    `json:"ua"`
+	IP        string    `json:"ip"`
 
 	// Domain specific fields
 	Content    string     `json:"content"`
@@ -47,6 +49,8 @@ type Memo struct {
 type MemoCreate struct {
 	// Standard fields
 	CreatorID int
+	UA        string `json:"ua"`
+	IP        string `json:"ip"`
 
 	// Domain specific fields
 	Visibility Visibility `json:"visibility"`
@@ -63,6 +67,8 @@ type MemoPatch struct {
 	CreatedTs *int64 `json:"createdTs"`
 	UpdatedTs *int64
 	RowStatus *RowStatus `json:"rowStatus"`
+	UA        string     `json:"ua"`
+	IP        string     `json:"ip"`
 
 	// Domain specific fields
 	Content    *string     `json:"content"`
@@ -78,7 +84,8 @@ type MemoFind struct {
 	// Standard fields
 	RowStatus *RowStatus `json:"rowStatus"`
 	CreatorID *int       `json:"creatorId"`
-
+	UA        *string    `json:"ua"`
+	IP        *string    `json:"ip"`
 	// Domain specific fields
 	Pinned         *bool
 	ContentSearch  *string
